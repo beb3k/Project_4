@@ -77,3 +77,83 @@ def RDkit_descriptors(smiles):
 
 Mol_descriptors,desc_names = RDkit_descriptors(df['canonical'])
 ```
+
+After this step, the dataset can be processed through regular machine learning pipeline
+
+### Train-test split
+
+Train-test is done in a straighforward manner. Please refer to the code snippet for clarity
+
+```
+X = df.drop(columns=['ic50', 'id', 'smiles', 'unit', 'canonical'])
+y = df['ic50']
+
+X_train, X_test, y_train, y_test = train_test_split(X, y, test_size=0.2, random_state=42)
+
+```
+
+### Scaling
+
+Scaling is done to all 200 descriptors using standard scaler. This step can be experimented upon for the best result
+
+```
+from sklearn.preprocessing import StandardScaler
+scaler = StandardScaler()
+
+X_train_scaled = scaler.fit_transform(X_train) # fit and transform the training dataset
+X_test_scaled = scaler.transform(X_test) # only transform the test set
+
+```
+
+### Clustering
+
+Due to the high-dimensionality of data, there is a need for dimensionality reduction. We employ DBSCAN to cluster the features. Before actually applyind DBSCAN it's proper to determine the 'epsilon' value. To do this we use k-distance graph
+
+```
+# k-distance graph to find a proper 'eps' for DBSCAN
+import numpy as np
+import matplotlib.pyplot as plt
+from sklearn.neighbors import NearestNeighbors
+
+k = 4
+
+neigh = NearestNeighbors(n_neighbors=k)
+nbrs = neigh.fit(X_train_scaled)
+distances, indices = nbrs.kneighbors(X_train_scaled)
+
+k_distances = np.sort(distances[:, k-1])
+
+plt.plot(range(1, len(k_distances) + 1), k_distances)
+plt.xlabel('Points sorted by distance')
+plt.ylabel(f'{k}-distance')
+plt.title(f'k-distance Graph for k={k}')
+plt.show()
+```
+![k-distance graph](https://example.com/path/to/image.png)
+
+As shown the elbow point is at y=10, thus epsilon is determined to be 10
+
+```
+dbscan = DBSCAN(eps=10, min_samples=5)
+clusters = dbscan.fit_predict(X_train_scaled)
+
+unique_labels = set(clusters)
+n_clusters = len(unique_labels) - (1 if -1 in clusters else 0)
+n_noise_points = list(clusters).count(-1)
+print(f"Number of clusters: {n_clusters}")
+print(f"Number of noise points: {n_noise_points}")
+```
+note: please refer to the attached Jupyter Notebook for the cluster visualization
+
+From this result we can separate the 'noise' from the non noise
+
+```
+from sklearn.model_selection import train_test_split
+
+is_noise = (clusters == -1)
+X_noise = X_train_scaled[is_noise]
+
+```
+note: Due to time constraint, 'X_noise' was left alone. Theoretically this could be used to derive new features, and can be used as a training dataset for model specific to the noise.
+
+
