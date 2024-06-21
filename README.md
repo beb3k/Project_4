@@ -104,6 +104,7 @@ X_train_scaled = scaler.fit_transform(X_train) # fit and transform the training 
 X_test_scaled = scaler.transform(X_test) # only transform the test set
 
 ```
+This is an especially important step particularly when using SVM or NN algorithms as it will be explaineed below
 
 ### Clustering
 
@@ -155,6 +156,23 @@ X_noise = X_train_scaled[is_noise]
 
 ```
 note: Due to time constraint, 'X_noise' was left alone. Theoretically this could be used to derive new features, and can be used as a training dataset for model specific to the noise.
+
+## Base Model Training
+
+The first round of training consists of training five different models and determine which from those 5 is best. Granted, the choice of what model to use here is somewhat arbitrary, empirically at best, thus 'unscientific;. Here I will outline the reason for choosing the models
+
+* Linear regression: as we're trying to solve a regression problem, the simplest model which is linear regression is chosen and could act as a baseline model to compare the other models to
+* Random Forest (RF): clasically a very effective model for regression and offers robustness and good generalization. They handle nonlinear relationships quite well and provide measures of feature importance, which can be very enlightening
+* Gradient Boosting Machines (GBM) i.e. XGBoost: work well for datasets with mixed data types and are generally considered to be more efficient in terms of computational resources
+* Support Vector Machines w/ Regression (SVM-R): able to deal with complex relationships that might not be linear, it's highly probable that this is the case considering the tremendous amount of features
+* Neural Networks i.e. Multi-Layer Perceptron (MLP): 'cutting edge' and proven in various bioinformatics application albeit not necessarily related to this case
+
+From this step SVM-R and MLP are apparently better than the rest, using MSE and R2 score as the evaluation metric
+note: for detailed results please refer to the attached Jupyter Notebook
+
+## Post-processing
+
+This step carries over the previous best two models to be processed using recursive feature elimination (RFE). Once again the n_features_to_select is decided arbitrarily
 
 
 
