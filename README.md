@@ -17,11 +17,11 @@ Drug development is naturally a long and arduous process, with the discovery of 
 
 ## Data Collection and Preparation
 
-The dataset for this project was obtained from the ChemBL database of the European Bioinformatic Institute (https://www.ebi.ac.uk/chembl/). We searched for BCR-ABL as the target, filtered for the human BCR-ABL gene, and selected only compounds with IC50 values towards BCR-ABL. After downloading, the dataset underwent a comprehensive chemoinformatics pipeline for preparation. This included generating 'canonical' SMILES from 'SMILES' and calculating 200 molecular descriptors using the RDKit library. Further preprocessing steps involved scaling, train-test splitting, and clustering. In the post-processing phase, we employed Recursive Feature Elimination with Cross-Validation (RFE-CV) and Principal Component Analysis (PCA) to refine our feature set and reduce dimensionality, respectively.
+The dataset for this project was obtained from the [ChemBL database of the European Bioinformatic Institute](https://www.ebi.ac.uk/chembl/). We searched for BCR-ABL as the target, filtered for the human BCR-ABL gene, and selected only compounds with IC50 values towards BCR-ABL. After downloading, the dataset underwent a comprehensive chemoinformatics pipeline for preparation. This included generating 'canonical' SMILES from 'SMILES' and calculating 200 molecular descriptors using the RDKit library. Further preprocessing steps involved scaling, train-test splitting, and clustering. In the post-processing phase, we employed Recursive Feature Elimination with Cross-Validation (RFE-CV) and Principal Component Analysis (PCA) to refine our feature set and reduce dimensionality, respectively.
 
 ### RDKit
 
-RDKit ([Github](https://github.com/rdkit/rdkit)/[Offcial site](https://www.rdkit.org]) is an open source python library designed to do chemoinformatics and machine learning related pipeline in medicinal chemistry. In this context, the most important use of RDKit is to generate molecular descriptors (mathematical representation of molecular features) from their respective SMILES. Before calculating the descriptor several step must be undertaken to ensure a proper data for training\
+RDKit ([Github](https://github.com/rdkit/rdkit)/[Offcial site](https://www.rdkit.org])) is an open source python library designed to do chemoinformatics and machine learning related pipeline in medicinal chemistry. In this context, the most important use of RDKit is to generate molecular descriptors (mathematical representation of molecular features) from their respective SMILES. Before calculating the descriptor several step must be undertaken to ensure a proper data for training\
 
 ### Canonical SMILES generation
 
@@ -47,8 +47,33 @@ duplicate = df[df['canonical'].duplicated()]['canonical'].values
 len(duplicate)
 ```
 ```
+df[df['canonical'].isin(duplicate)].sort_values(by='canonical')
+```
+```
 df = df.drop_duplicates(subset='canonical')
-df
 ```
 
 ### Descriptor calculation
+
+By design, RDKit can calculate about 200 descriptors ([documentation](https://www.rdkit.org/docs/GettingStartedInPython.html#list-of-available-descriptors)) using this function
+
+```
+def RDkit_descriptors(smiles):
+    mols = [Chem.MolFromSmiles(i) for i in smiles]
+    calc = MoleculeDescriptors.MolecularDescriptorCalculator([x[0] for x in Descriptors._descList])
+    desc_names = calc.GetDescriptorNames()
+
+    Mol_descriptors =[]
+    for mol in mols:
+        # add hydrogens to molecules
+        mol=Chem.AddHs(mol)
+        # Calculate all 200 descriptors for each molecule
+        descriptors = calc.CalcDescriptors(mol)
+        Mol_descriptors.append(descriptors)
+    return Mol_descriptors,desc_names
+```
+```
+#function calling
+
+Mol_descriptors,desc_names = RDkit_descriptors(df['canonical'])
+```
