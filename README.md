@@ -18,3 +18,37 @@ Drug development is naturally a long and arduous process, with the discovery of 
 ## Data Collection and Preparation
 
 The dataset for this project was obtained from the ChemBL database of the European Bioinformatic Institute (https://www.ebi.ac.uk/chembl/). We searched for BCR-ABL as the target, filtered for the human BCR-ABL gene, and selected only compounds with IC50 values towards BCR-ABL. After downloading, the dataset underwent a comprehensive chemoinformatics pipeline for preparation. This included generating 'canonical' SMILES from 'SMILES' and calculating 200 molecular descriptors using the RDKit library. Further preprocessing steps involved scaling, train-test splitting, and clustering. In the post-processing phase, we employed Recursive Feature Elimination with Cross-Validation (RFE-CV) and Principal Component Analysis (PCA) to refine our feature set and reduce dimensionality, respectively.
+
+### RDKit
+
+RDKit ([Github](https://github.com/rdkit/rdkit)/[Offcial site](https://www.rdkit.org]) is an open source python library designed to do chemoinformatics and machine learning related pipeline in medicinal chemistry. In this context, the most important use of RDKit is to generate molecular descriptors (mathematical representation of molecular features) from their respective SMILES. Before calculating the descriptor several step must be undertaken to ensure a proper data for training\
+
+### Canonical SMILES generation
+
+SMILES should be discrete for every molecule. Sometimes the SMILES are written slightly different but refers to the same molecule. Canonical SMILES generation eliminate the possibility of the same molecule having slightly different SMILES. Imagine, someone write 'sugar' as 'sugAr', both refer to the same thing, which is sugar, but the algorithm identifies sugar and sugAr as different molecules. Canonical SMILES generation eliminates 'sugAr' and assigned it also as 'sugar'
+
+this step also use RDKit especially the ```def canonical_smiles(smiles):``` as outlined below
+
+```
+def canonical_smiles(smiles):
+   mols = [Chem.MolFromSmiles(smi) for smi in smiles]
+   canonical_smiles = [Chem.MolToSmiles(mol) for mol in mols]
+   return canonical_smiles
+
+df['canonical'] = canonical_smiles(df['smiles'])
+```
+
+### Duplicate handling
+
+Molecular duplicates are listed and dropped to prevent redundancy 
+
+```
+duplicate = df[df['canonical'].duplicated()]['canonical'].values
+len(duplicate)
+```
+```
+df = df.drop_duplicates(subset='canonical')
+df
+```
+
+### Descriptor calculation
