@@ -199,3 +199,52 @@ print(f'Number of components selected: {pca.n_components_}') # inspect number of
 X_test_pca = pca.transform(X_test_scaled)
 ```
 note: the decision to do PCA right after RFE was done yet again arbitrarily and due to time constraint, and might not be commonly done in a proper ML pipeline 
+
+## Final Model Training
+
+Using the dataset that has been reduced by PCA
+
+for SVR
+
+```
+from sklearn.svm import SVR
+from sklearn.preprocessing import StandardScaler
+from sklearn.pipeline import Pipeline
+from sklearn.metrics import mean_squared_error, r2_score
+
+svm_pipeline = Pipeline([
+    ('svm', SVR())
+])
+
+svm_pipeline.fit(X_train_pca, y_train)
+
+y_pred_svm = svm_pipeline.predict(X_test_pca)
+mse_svm = mean_squared_error(y_test, y_pred_svm)
+r2_svm = r2_score(y_test, y_pred_svm)
+print(f"SVM Mean Squared Error: {mse_svm:.2f}")
+print(f"SVM R^2 Score: {r2_svm:.2f}")
+```
+and for MLP
+```
+from sklearn.neural_network import MLPRegressor
+from sklearn.preprocessing import StandardScaler
+from sklearn.pipeline import Pipeline
+
+mlp_pipeline = Pipeline([
+    ('scaler', StandardScaler()),
+    ('mlp', MLPRegressor(hidden_layer_sizes=(100, 50), max_iter=500, random_state=42))
+])
+
+# Train
+mlp_pipeline.fit(X_train_pca, y_train)
+
+y_pred_mlp = mlp_pipeline.predict(X_test_pca)
+mse_mlp = mean_squared_error(y_test, y_pred_mlp)
+r2_mlp = r2_score(y_test, y_pred_mlp)
+print(f"MLP Mean Squared Error: {mse_mlp:.2f}")
+print(f"MLP R^2 Score: {r2_mlp:.2f}")
+```
+
+Note: please refer to the attached Jupyter Notebook for the results
+
+
