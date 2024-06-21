@@ -172,7 +172,30 @@ note: for detailed results please refer to the attached Jupyter Notebook
 
 ## Post-processing
 
-This step carries over the previous best two models to be processed using recursive feature elimination (RFE). Once again the n_features_to_select is decided arbitrarily
+This step carries over the previous best two models to be processed using recursive feature elimination (RFE). Once again the 'estimator' and 'n_features_to_select' was decided arbitrarily
 
+```
+from sklearn.feature_selection import RFE
+from sklearn.linear_model import LinearRegression
 
+estimator = LinearRegression() # can be experimented upon
 
+rfe = RFE(estimator=estimator, n_features_to_select=50)  # 'n' can be experimented upon
+
+rfe.fit(X_train, y_train)
+```
+
+the RFE-fitted dataset was then fitted to PCA with PCA(n-components=0.95). 
+
+```
+from sklearn.decomposition import PCA
+pca = PCA(n_components=0.95)  # can be changed
+
+X_train_pca = pca.fit_transform(X_train_scaled)
+print(f'Number of components selected: {pca.n_components_}') # inspect number of components
+
+```
+```
+X_test_pca = pca.transform(X_test_scaled)
+```
+note: the decision to do PCA right after RFE was done yet again arbitrarily and due to time constraint, and might not be commonly done in a proper ML pipeline 
